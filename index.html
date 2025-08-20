@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Coding - Tanya Jawab Programming</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .chat-container {
+            width: 90%;
+            max-width: 800px;
+            height: 90vh;
+            background: #1a1a2e;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .chat-header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .chat-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .status-indicator {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            background: #4CAF50;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #16213e;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.bot {
+            justify-content: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.bot .message-bubble {
+            background: #0f3460;
+            color: #e8eaed;
+            border-bottom-left-radius: 5px;
+            border: 1px solid #233553;
+        }
+
+        .code-block {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+
+        .code-header {
+            background: #21262d;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #8b949e;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .code-content {
+            padding: 15px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            color: #e6edf3;
+            white-space: pre-wrap;
+        }
+
+        .chat-input-container {
+            background: #0f3460;
+            padding: 20px;
+            border-top: 1px solid #233553;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #233553;
+            border-radius: 25px;
+            background: #16213e;
+            color: #e8eaed;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #667eea;
+        }
+
+        .chat-input::placeholder {
+            color: #8b949e;
+        }
+
+        .send-button {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .send-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .send-button:active {
+            transform: translateY(0);
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 15px 20px;
+            background: #0f3460;
+            border-radius: 20px;
+            border-bottom-left-radius: 5px;
+            max-width: 70%;
+            border: 1px solid #233553;
+        }
+
+        .typing-dots {
+            display: inline-flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #8b949e;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        .welcome-message {
+            text-align: center;
+            color: #8b949e;
+            margin: 50px 0;
+        }
+
+        .welcome-message h2 {
+            color: #e8eaed;
+            margin-bottom: 10px;
+        }
+
+        .quick-questions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .quick-question {
+            padding: 8px 15px;
+            background: #233553;
+            color: #e8eaed;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .quick-question:hover {
+            background: #667eea;
+        }
+
+        /* Scrollbar styling */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #16213e;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #233553;
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #667eea;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .chat-container {
+                width: 95%;
+                height: 95vh;
+            }
+            
+            .message-bubble {
+                max-width: 85%;
+            }
+            
+            .chat-header h1 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🤖 Chatbot Coding</h1>
+            <p>Tanya apa saja tentang programming!</p>
+            <div class="status-indicator"></div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="welcome-message">
+                <h2>Selamat datang di Chatbot Coding! 👋</h2>
+                <p>Saya siap membantu Anda dengan pertanyaan seputar programming.</p>
+                <div class="quick-questions">
+                    <div class="quick-question" onclick="sendQuickQuestion('Bagaimana cara print di Python?')">Print Python</div>
+                    <div class="quick-question" onclick="sendQuickQuestion('Cara membuat fungsi JavaScript')">Fungsi JS</div>
+                    <div class="quick-question" onclick="sendQuickQuestion('HTML button')">HTML Button</div>
+                    <div class="quick-question" onclick="sendQuickQuestion('CSS flexbox')">CSS Flexbox</div>
+                </div>
+            </div>
+            
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Ketik pertanyaan Anda di sini..." autocomplete="off">
+                <button class="send-button" onclick="sendMessage()">Kirim</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const codingQA = [
+            {
+                keywords: ["print", "python", "cetak", "output"],
+                question: "Cara print di Python",
+                answer: "Untuk mencetak output di Python, gunakan fungsi print().",
+                code: "# Contoh print di Python\nprint('Hello, World!')\nprint('Nama saya:', 'John')\n\n# Print dengan variabel\nnama = 'Python'\nprint(f'Saya belajar {nama}')\n\n# Print multiple values\nprint('Angka:', 123, 'Teks:', 'ABC')"
+            },
+            {
+                keywords: ["fungsi", "function", "javascript", "js"],
+                question: "Cara membuat fungsi JavaScript",
+                answer: "Ada beberapa cara membuat fungsi di JavaScript: function declaration, function expression, dan arrow function.",
+                code: "// Function Declaration\nfunction salam(nama) {\n    return 'Halo, ' + nama + '!';\n}\n\n// Function Expression\nconst tambah = function(a, b) {\n    return a + b;\n};\n\n// Arrow Function\nconst kali = (a, b) => a * b;\n\n// Contoh penggunaan\nconsole.log(salam('John'));\nconsole.log(tambah(5, 3));\nconsole.log(kali(4, 2));"
+            },
+            {
+                keywords: ["html", "button", "tombol"],
+                question: "Cara membuat button HTML",
+                answer: "Button HTML dibuat dengan tag button dan bisa ditambahkan event handler untuk interaktivitas.",
+                code: "<!-- Button dasar -->\n<button>Klik Saya</button>\n\n<!-- Button dengan type -->\n<button type='submit'>Submit</button>\n<button type='reset'>Reset</button>\n\n<!-- Button dengan onclick -->\n<button onclick='alert(\"Button diklik!\")'>Alert</button>\n\n<!-- Button dengan ID dan class -->\n<button id='myButton' class='btn-primary'>\n    Styled Button\n</button>\n\n<script>\n// JavaScript untuk button\ndocument.getElementById('myButton').addEventListener('click', function() {\n    console.log('Button diklik!');\n});\n</script>"
+            },
+            {
+                keywords: ["css", "style", "styling", "warna", "color"],
+                question: "CSS dasar untuk styling",
+                answer: "CSS digunakan untuk styling HTML. Bisa diterapkan inline, internal, atau external.",
+                code: "/* CSS Selector dasar */\nh1 {\n    color: blue;\n    font-size: 24px;\n}\n\n.my-class {\n    background-color: #f0f0f0;\n    padding: 10px;\n    margin: 5px;\n}\n\n#my-id {\n    border: 1px solid #ccc;\n    border-radius: 5px;\n}\n\n/* CSS Flexbox */\n.container {\n    display: flex;\n    justify-content: center;\n    align-items: center;\n    height: 100vh;\n}"
+            },
+            {
+                keywords: ["flexbox", "flex", "css layout"],
+                question: "CSS Flexbox",
+                answer: "Flexbox adalah sistem layout CSS yang memudahkan pengaturan elemen secara fleksibel.",
+                code: "/* Container Flex */\n.flex-container {\n    display: flex;\n    flex-direction: row; /* row, column, row-reverse, column-reverse */\n    justify-content: center; /* flex-start, flex-end, center, space-between, space-around */\n    align-items: center; /* flex-start, flex-end, center, stretch, baseline */\n    flex-wrap: wrap; /* nowrap, wrap, wrap-reverse */\n    gap: 10px;\n}\n\n/* Flex Items */\n.flex-item {\n    flex: 1; /* flex-grow: 1, flex-shrink: 1, flex-basis: 0% */\n    /* atau */\n    flex-grow: 1;\n    flex-shrink: 0;\n    flex-basis: 200px;\n}"
+            },
+            {
+                keywords: ["php", "variable", "variabel"],
+                question: "Variable di PHP",
+                answer: "Variable di PHP dimulai dengan tanda $ dan tidak perlu deklarasi tipe data.",
+                code: "<?php\n// Variable dasar\n$nama = 'John Doe';\n$umur = 25;\n$tinggi = 175.5;\n$aktif = true;\n\n// Array\n$buah = array('apel', 'jeruk', 'pisang');\n$buah = ['apel', 'jeruk', 'pisang']; // PHP 5.4+\n\n// Associative array\n$data = array(\n    'nama' => 'John',\n    'umur' => 25,\n    'kota' => 'Jakarta'\n);\n\n// Output\necho 'Nama: ' . $nama . '<br>';\necho \"Umur: $umur tahun<br>\";\nprint_r($buah);\n?>"
+            },
+            {
+                keywords: ["git", "version control", "repository"],
+                question: "Git dasar",
+                answer: "Git adalah sistem version control untuk tracking perubahan kode.",
+                code: "# Inisialisasi repository\ngit init\n\n# Clone repository\ngit clone https://github.com/user/repo.git\n\n# Status file\ngit status\n\n# Add file ke staging\ngit add filename.txt\ngit add .  # add semua file\n\n# Commit perubahan\ngit commit -m 'Pesan commit'\n\n# Push ke remote repository\ngit push origin main\n\n# Pull dari remote\ngit pull origin main\n\n# Membuat branch baru\ngit checkout -b feature-branch\n\n# Pindah branch\ngit checkout main\n\n# Merge branch\ngit merge feature-branch"
+            },
+            {
+                keywords: ["nodejs", "node.js", "npm", "javascript server"],
+                question: "Node.js dasar",
+                answer: "Node.js adalah runtime JavaScript untuk server-side development.",
+                code: "// app.js - Server HTTP sederhana\nconst http = require('http');\nconst fs = require('fs');\n\nconst server = http.createServer((req, res) => {\n    res.writeHead(200, {'Content-Type': 'text/html'});\n    res.end('<h1>Hello Node.js!</h1>');\n});\n\nserver.listen(3000, () => {\n    console.log('Server running at http://localhost:3000/');\n});\n\n// Express.js example\nconst express = require('express');\nconst app = express();\n\napp.get('/', (req, res) => {\n    res.send('Hello Express!');\n});\n\napp.listen(3000, () => {\n    console.log('Server running on port 3000');\n});"
+            },
+            {
+                keywords: ["loop", "for", "while", "perulangan", "javascript"],
+                question: "Loop di JavaScript",
+                answer: "JavaScript memiliki beberapa jenis loop: for, while, do-while, for...in, for...of.",
+                code: "// For loop\nfor (let i = 0; i < 5; i++) {\n    console.log('Angka:', i);\n}\n\n// While loop\nlet x = 0;\nwhile (x < 5) {\n    console.log('Nilai x:', x);\n    x++;\n}\n\n// Do-while loop\nlet y = 0;\ndo {\n    console.log('Nilai y:', y);\n    y++;\n} while (y < 3);\n\n// For...in (untuk object)\nconst obj = {a: 1, b: 2, c: 3};\nfor (let key in obj) {\n    console.log(key, obj[key]);\n}\n\n// For...of (untuk array)\nconst arr = ['a', 'b', 'c'];\nfor (let value of arr) {\n    console.log(value);\n}"
+            },
+            {
+                keywords: ["array", "list", "python"],
+                question: "Array/List di Python",
+                answer: "Python menggunakan list yang sangat fleksibel untuk menyimpan koleksi data.",
+                code: "# Membuat list\nbuah = ['apel', 'jeruk', 'pisang']\nangka = [1, 2, 3, 4, 5]\nmixed = [1, 'text', True, 3.14]\n\n# Akses elemen\nprint(buah[0])  # apel\nprint(buah[-1]) # pisang (dari belakang)\n\n# Menambah elemen\nbuah.append('mangga')\nbuah.insert(1, 'anggur')\n\n# Menghapus elemen\nbuah.remove('jeruk')\ndel buah[0]\n\n# List comprehension\nsquares = [x**2 for x in range(5)]\n# [0, 1, 4, 9, 16]\n\n# Method list lainnya\nprint(len(buah))      # panjang list\nprint('apel' in buah) # cek keberadaan\nbuah.sort()           # sorting"
+            },
+            {
+                keywords: ["dom", "javascript", "element", "html"],
+                question: "DOM Manipulation JavaScript",
+                answer: "DOM (Document Object Model) memungkinkan JavaScript memanipulasi HTML elements.",
+                code: "// Seleksi element\nconst element = document.getElementById('myId');\nconst elements = document.getElementsByClassName('myClass');\nconst element2 = document.querySelector('.myClass');\nconst elements2 = document.querySelectorAll('div');\n\n// Mengubah konten\nelement.innerHTML = '<strong>Teks baru</strong>';\nelement.textContent = 'Teks tanpa HTML';\n\n// Mengubah atribut\nelement.setAttribute('class', 'new-class');\nelement.style.color = 'red';\nelement.style.backgroundColor = 'yellow';\n\n// Event listener\nelement.addEventListener('click', function() {\n    alert('Element diklik!');\n});\n\n// Membuat element baru\nconst newDiv = document.createElement('div');\nnewDiv.textContent = 'Div baru';\ndocument.body.appendChild(newDiv);"
+            },
+            {
+                keywords: ["class", "object", "python", "oop"],
+                question: "Class dan Object di Python",
+                answer: "Python mendukung Object-Oriented Programming dengan class dan object.",
+                code: "# Definisi class\nclass Mobil:\n    # Constructor\n    def __init__(self, merk, warna):\n        self.merk = merk\n        self.warna = warna\n        self.kecepatan = 0\n    \n    # Method\n    def gas(self, tambah_kecepatan):\n        self.kecepatan += tambah_kecepatan\n        print(f'Kecepatan sekarang: {self.kecepatan} km/h')\n    \n    def rem(self):\n        self.kecepatan = 0\n        print('Mobil berhenti')\n    \n    def info(self):\n        return f'Mobil {self.merk} warna {self.warna}'\n\n# Membuat object\nmobil1 = Mobil('Toyota', 'Merah')\nmobil2 = Mobil('Honda', 'Biru')\n\n# Menggunakan method\nprint(mobil1.info())\nmobil1.gas(50)\nmobil1.rem()"
+            },
+            {
+                keywords: ["ajax", "fetch", "api", "javascript"],
+                question: "AJAX dan Fetch API",
+                answer: "AJAX memungkinkan komunikasi asinkron dengan server. Modern JavaScript menggunakan Fetch API.",
+                code: "// Menggunakan Fetch API\nfetch('https://api.example.com/data')\n    .then(response => response.json())\n    .then(data => {\n        console.log(data);\n    })\n    .catch(error => {\n        console.error('Error:', error);\n    });\n\n// Dengan async/await\nasync function getData() {\n    try {\n        const response = await fetch('https://api.example.com/data');\n        const data = await response.json();\n        console.log(data);\n    } catch (error) {\n        console.error('Error:', error);\n    }\n}\n\n// POST request\nfetch('https://api.example.com/users', {\n    method: 'POST',\n    headers: {\n        'Content-Type': 'application/json',\n    },\n    body: JSON.stringify({\n        name: 'John',\n        email: 'john@example.com'\n    })\n})\n.then(response => response.json())\n.then(data => console.log(data));"
+            }
+        ];
+
+        function findAnswer(userInput) {
+            const input = userInput.toLowerCase();
+            
+            for (let qa of codingQA) {
+                for (let keyword of qa.keywords) {
+                    if (input.includes(keyword.toLowerCase())) {
+                        return qa;
+                    }
+                }
+            }
+            
+            return null;
+        }
+
+        function displayMessage(message, isUser = false) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            
+            if (isUser) {
+                bubble.textContent = message;
+            } else {
+                const parts = message.split('```');
+                
+                if (parts.length === 1) {
+                    bubble.innerHTML = message.replace(/\n/g, '<br>');
+                } else {
+                    let html = '';
+                    for (let i = 0; i < parts.length; i++) {
+                        if (i % 2 === 0) {
+                            html += parts[i].replace(/\n/g, '<br>');
+                        } else {
+                            const lines = parts[i].split('\n');
+                            const lang = lines[0] || 'code';
+                            const code = lines.slice(1).join('\n');
+                            
+                            html += `
+                                <div class="code-block">
+                                    <div class="code-header">${lang}</div>
+                                    <div class="code-content">${code}</div>
+                                </div>
+                            `;
+                        }
+                    }
+                    bubble.innerHTML = html;
+                }
+            }
+            
+            messageDiv.appendChild(bubble);
+            chatMessages.appendChild(messageDiv);
+            
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showTyping() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            typingIndicator.style.display = 'block';
+            
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function hideTyping() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            typingIndicator.style.display = 'none';
+        }
+
+        function sendMessage() {
+            const chatInput = document.getElementById('chatInput');
+            const userMessage = chatInput.value.trim();
+            
+            if (userMessage === '') return;
+            
+            const welcomeMessage = document.querySelector('.welcome-message');
+            if (welcomeMessage) {
+                welcomeMessage.remove();
+            }
+            
+            displayMessage(userMessage, true);
+            
+            chatInput.value = '';
+            
+            showTyping();
+            
+            setTimeout(() => {
+                hideTyping();
+                
+                const answer = findAnswer(userMessage);
+                
+                if (answer) {
+                    let response = answer.answer;
+                    
+                    if (answer.code) {
+                        const lang = answer.question.includes('Python') ? 'python' : 
+                                   answer.question.includes('PHP') ? 'php' :
+                                   answer.question.includes('HTML') ? 'html' :
+                                   answer.question.includes('CSS') ? 'css' :
+                                   answer.question.includes('Git') ? 'bash' :
+                                   'javascript';
+                        
+                        response += '\n\n```' + lang + '\n' + answer.code + '\n```';
+                    }
+                    
+                    displayMessage(response);
+                } else {
+                    const defaultResponse = `Maaf, saya belum bisa menjawab pertanyaan "${userMessage}". 
+                    
+Saya bisa membantu dengan topik:
+• HTML & CSS
+• JavaScript & Node.js  
+• Python
+• PHP & MySQL
+• Git
+• Dan topik programming lainnya
+
+Coba tanya dengan kata kunci yang lebih spesifik! 😊`;
+                    
+                    displayMessage(defaultResponse);
+                }
+            }, 1000 + Math.random() * 1000);
+        }
+
+        function sendQuickQuestion(question) {
+            const chatInput = document.getElementById('chatInput');
+            chatInput.value = question;
+            sendMessage();
+        }
+
+        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('chatInput').focus();
+        });
+    </script>
+</body>
+</html>
